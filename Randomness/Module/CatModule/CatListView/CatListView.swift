@@ -22,24 +22,28 @@ struct CatListView<ViewModel: CatListViewModelProtocol>: View {
     var body: some View {
         GeometryReader { proxy in
             let itemWidth = itemWidth(for: proxy.size.width)
+            let columns = distributed(viewModel.images, width: itemWidth)
 
             ScrollView {
-                LazyVGrid(
-                    columns: Array(
-                        repeating: GridItem(.fixed(itemWidth), spacing: spacing),
-                        count: columnCount
-                    ),
-                    spacing: spacing
-                ) {
-                    ForEach(viewModel.images) { image in
-                        Button {
-                            viewModel.didSelect(image)
-                        } label: {
-                            CatImageCell(image: image, width: itemWidth)
+                // Masonry layout: each column is packed independently so the
+                // spacing stays constant even though cells have different
+                // heights (a LazyVGrid would align rows and leave gaps).
+                HStack(alignment: .top, spacing: spacing) {
+                    ForEach(Array(columns.enumerated()), id: \.offset) { _, column in
+                        LazyVStack(spacing: spacing) {
+                            ForEach(column) { image in
+                                Button {
+                                    viewModel.didSelect(image)
+                                } label: {
+                                    CatImageCell(image: image, width: itemWidth)
+                                }
+                                .buttonStyle(.plain)
+                            }
                         }
-                        .buttonStyle(.plain)
+                        .frame(width: itemWidth)
                     }
                 }
+                .frame(maxWidth: .infinity, alignment: .top)
                 .padding(.horizontal, horizontalPadding)
                 .padding(.vertical, spacing)
             }
@@ -71,6 +75,24 @@ struct CatListView<ViewModel: CatListViewModelProtocol>: View {
             - (horizontalPadding * 2)
             - (spacing * CGFloat(columnCount - 1))
         return max(1, available / CGFloat(columnCount))
+    }
+
+    /// Greedy waterfall distribution: every image goes to the column that is
+    /// currently the shortest, which keeps the gaps between cells constant.
+    private func distributed(_ images: [CatImage], width: CGFloat) -> [[CatImage]] {
+        var columns: [[CatImage]] = Array(repeating: [], count: columnCount)
+        var heights = [CGFloat](repeating: 0, count: columnCount)
+
+        for image in images {
+            let shortest = heights.enumerated().min { lhs, rhs in
+                lhs.element == rhs.element ? lhs.offset < rhs.offset : lhs.element < rhs.element
+            }?.offset ?? 0
+
+            columns[shortest].append(image)
+            heights[shortest] += (width / max(image.aspectRatio, 0.01)) + spacing
+        }
+
+        return columns
     }
 }
 
