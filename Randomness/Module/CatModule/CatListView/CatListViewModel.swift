@@ -23,12 +23,14 @@ final class CatListViewModel: CatListViewModelProtocol {
 
     private let service: CatServiceProtocol
     private let limit: Int
-    private let onSelect: (CatImage) -> Void
+    /// Receives the tapped image plus the already loaded list, so the detail
+    /// screen doesn't need to re-fetch anything.
+    private let onSelect: (CatImage, [CatImage]) -> Void
 
     init(
         service: CatServiceProtocol,
         limit: Int = 10,
-        onSelect: @escaping (CatImage) -> Void = { _ in }
+        onSelect: @escaping (CatImage, [CatImage]) -> Void = { _, _ in }
     ) {
         self.service = service
         self.limit = limit
@@ -49,6 +51,6 @@ final class CatListViewModel: CatListViewModelProtocol {
     }
 
     func didSelect(_ image: CatImage) {
-        onSelect(image)
+        onSelect(image, images)
     }
 }

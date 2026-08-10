@@ -44,6 +44,8 @@ struct CatListView<ViewModel: CatListViewModelProtocol>: View {
                 .padding(.vertical, spacing)
             }
             .scrollIndicators(.hidden)
+            // Content scrolls under the Liquid Glass tab bar with a soft edge.
+            .scrollEdgeEffectStyle(.soft, for: .bottom)
             .refreshable { await viewModel.loadImages() }
         }
         .overlay {
