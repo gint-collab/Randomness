@@ -72,7 +72,6 @@ private struct CatFeedSkeleton: View {
             .padding(.vertical, 10)
         }
         .scrollDisabled(true)
-        .background(Color(.systemGroupedBackground))
         .accessibilityLabel("Loading cat feed")
     }
 }
@@ -100,7 +99,7 @@ private struct CatPostSkeleton: View {
                 .padding(.horizontal, 12)
         }
         .padding(.vertical, 12)
-        .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+        .cardSurface()
         .padding(.horizontal, 8)
         .accessibilityHidden(true)
     }
@@ -129,7 +128,7 @@ private struct CatPostCard: View {
             actionBar
         }
         .padding(.vertical, 12)
-        .background(Color(.systemBackground))
+        .cardSurface()
         .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
         .padding(.horizontal, 8)
     }

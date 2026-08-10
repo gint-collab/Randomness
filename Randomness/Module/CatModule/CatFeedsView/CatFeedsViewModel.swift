@@ -8,36 +8,6 @@
 import SwiftUI
 import Combine
 
-/// A single item in the cat feed, modelled like a social post.
-nonisolated struct CatPost: Identifiable, Hashable, Sendable {
-    let id: String
-    let image: CatImage
-    var fact: CatFact?
-    var likeCount: Int
-    var commentCount: Int
-    var isLiked: Bool
-    let postedAt: Date
-
-    init(
-        image: CatImage,
-        fact: CatFact? = nil,
-        likeCount: Int = Int.random(in: 12...2400),
-        commentCount: Int = Int.random(in: 0...180),
-        isLiked: Bool = false,
-        postedAt: Date = Date().addingTimeInterval(-Double.random(in: 300...86_400 * 5))
-    ) {
-        self.id = image.id
-        self.image = image
-        self.fact = fact
-        self.likeCount = likeCount
-        self.commentCount = commentCount
-        self.isLiked = isLiked
-        self.postedAt = postedAt
-    }
-
-    var authorName: String { "Cat #\(image.id.prefix(4))" }
-}
-
 @MainActor
 protocol CatFeedsViewModelProtocol: LoadableViewModel {
     /// The image the feed was seeded with, when opened from a specific cat.
@@ -83,19 +53,39 @@ final class CatFeedsViewModel: CatFeedsViewModelProtocol {
         await loadMore()
     }
 
+    func loadMore() async {
+        guard !isLoadingMore else { return }
+        isLoadingMore = true
+
+        defer { isLoadingMore = false }
+
+        let currentCount = posts.count
+        let seed = seedImage
+
+        await perform { [weak self] in
+            guard let self else { return }
+            let newPosts = try await self.service.fetchPosts(
+                offset: currentCount,
+                limit: self.pageSize,
+                seed: seed
+            )
+            self.posts.append(contentsOf: newPosts)
+        }
+    }
+
+    /// Triggers the next page once the user reaches the last few cards.
     func loadMoreIfNeeded(currentItem: CatPost) async {
-        guard let index = posts.firstIndex(of: currentItem) else { return }
-        guard index >= posts.count - 3 else { return }
+        guard !isLoadingMore else { return }
+        let thresholdIndex = posts.index(posts.endIndex, offsetBy: -3, limitedBy: posts.startIndex) ?? posts.startIndex
+        guard let index = posts.firstIndex(where: { $0.id == currentItem.id }),
+              index >= thresholdIndex else { return }
         await loadMore()
     }
 
     func toggleLike(_ post: CatPost) {
         guard let index = posts.firstIndex(where: { $0.id == post.id }) else { return }
         posts[index].isLiked.toggle()
-        posts[index].likeCount += posts[index].isLiked ? 1 : -1
     }
-
-    // MARK: - Private
 
     private func loadFactForFirstPost() async {
         guard !posts.isEmpty else { return }
@@ -103,32 +93,6 @@ final class CatFeedsViewModel: CatFeedsViewModelProtocol {
             guard let self else { return }
             let fact = try await self.service.randomFact()
             if !self.posts.isEmpty { self.posts[0].fact = fact }
-        }
-    }
-
-    private func loadMore() async {
-        guard !isLoadingMore else { return }
-        isLoadingMore = true
-        defer { isLoadingMore = false }
-
-        do {
-            async let imagesTask = service.images(limit: pageSize)
-            async let factsTask = service.facts(limit: pageSize)
-            let (images, facts) = try await (imagesTask, factsTask)
-
-            var existing = Set(posts.map(\.id))
-            var newPosts: [CatPost] = []
-            for (offset, item) in images.enumerated() where !existing.contains(item.id) {
-                existing.insert(item.id)
-                newPosts.append(
-                    CatPost(image: item, fact: offset < facts.count ? facts[offset] : nil)
-                )
-            }
-            posts.append(contentsOf: newPosts)
-        } catch {
-            if posts.count <= 1 {
-                errorMessage = (error as? LocalizedError)?.errorDescription ?? error.localizedDescription
-            }
         }
     }
 }

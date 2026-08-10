@@ -41,13 +41,19 @@ extension View {
         }
     }
     
-    @ViewBuilder
+    /// Screen-level background matching native iOS grouped screens.
+    /// Adapts automatically to light/dark mode.
     func defaultBackground() -> some View {
-        if #available(iOS 26.0, *) {
-            self.background(Color.black.opacity(0.8))
-        } else {
-            self
-        }
+        self.background(Color(.systemGroupedBackground).ignoresSafeArea())
+    }
+
+    /// Surface for cards placed on top of ``defaultBackground()``, matching the
+    /// native grouped-list cell background.
+    func cardSurface(cornerRadius: CGFloat = 14) -> some View {
+        self.background(
+            Color(.secondarySystemGroupedBackground),
+            in: RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+        )
     }
     
     @ViewBuilder

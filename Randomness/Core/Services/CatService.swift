@@ -30,6 +30,32 @@ protocol CatServiceProtocol {
     func randomFact() async throws -> CatFact
     func facts(limit: Int) async throws -> [CatFact]
     func images(limit: Int) async throws -> [CatImage]
+    /// Builds a page of feed posts by pairing random images with random facts.
+    /// - Parameters:
+    ///   - offset: Number of posts already shown, used to keep ids unique.
+    ///   - limit: Page size.
+    ///   - seed: Optional image whose id must be excluded from the page.
+    func fetchPosts(offset: Int, limit: Int, seed: CatImage?) async throws -> [CatPost]
+}
+
+extension CatServiceProtocol {
+    func fetchPosts(offset: Int, limit: Int, seed: CatImage?) async throws -> [CatPost] {
+        async let imagesTask = images(limit: limit)
+        async let factsTask = facts(limit: limit)
+        let (pageImages, pageFacts) = try await (imagesTask, factsTask)
+
+        return pageImages
+            .filter { $0.id != seed?.id }
+            .enumerated()
+            .map { index, image in
+                CatPost(
+                    image: image,
+                    id: "\(image.id)-\(offset + index)",
+                    fact: index < pageFacts.count ? pageFacts[index] : nil,
+                    postedAt: Date.now.addingTimeInterval(-Double((offset + index) * 3_600))
+                )
+            }
+    }
 }
 
 enum CatEndpoint: EndpointProtocol {
