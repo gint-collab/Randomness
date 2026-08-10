@@ -88,14 +88,13 @@ private struct JokeCard: View {
                 .lineSpacing(4)
                 .multilineTextAlignment(.center)
                 .fixedSize(horizontal: false, vertical: true)
-                .foregroundStyle(.white
-                )
+                .foregroundStyle(.white)
                 .shadow(color: .black.opacity(0.35), radius: 4, x: 0, y: 2)
                 .textCase(.none)
         }
         .padding(24)
         .frame(maxWidth: .infinity)
-        .background(LinearGradient(colors: [Color.purple,Color.pink], startPoint: .topLeading, endPoint: .bottomTrailing))
+        .defaultBackground()
         .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
         .accessibilityElement(children: .combine)
     }

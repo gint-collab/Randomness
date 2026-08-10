@@ -13,6 +13,8 @@ struct CatListView<ViewModel: CatListViewModelProtocol>: View {
     private let columnCount: Int
     private let spacing: CGFloat = 12
     private let horizontalPadding: CGFloat = 16
+    /// Images with an intrinsic width above this take a full row on their own.
+    private let wideThreshold: CGFloat = 640
 
     init(viewModel: @autoclosure @escaping () -> ViewModel, columnCount: Int = 2) {
         _viewModel = StateObject(wrappedValue: viewModel())
@@ -21,26 +23,21 @@ struct CatListView<ViewModel: CatListViewModelProtocol>: View {
 
     var body: some View {
         GeometryReader { proxy in
+            let contentWidth = max(1, proxy.size.width - (horizontalPadding * 2))
             let itemWidth = itemWidth(for: proxy.size.width)
-            let columns = distributed(viewModel.images, width: itemWidth)
+            let layoutSections = sections(for: viewModel.images)
 
             ScrollView {
-                // Masonry layout: each column is packed independently so the
-                // spacing stays constant even though cells have different
-                // heights (a LazyVGrid would align rows and leave gaps).
-                HStack(alignment: .top, spacing: spacing) {
-                    ForEach(Array(columns.enumerated()), id: \.offset) { _, column in
-                        LazyVStack(spacing: spacing) {
-                            ForEach(column) { image in
-                                Button {
-                                    viewModel.didSelect(image)
-                                } label: {
-                                    CatImageCell(image: image, width: itemWidth)
-                                }
-                                .buttonStyle(.plain)
-                            }
+                LazyVStack(spacing: spacing) {
+                    ForEach(layoutSections) { section in
+                        switch section.kind {
+                        case .wide(let image):
+                            // Intrinsic width above the threshold: the image
+                            // gets the whole row as a single column.
+                            cell(for: image, width: contentWidth)
+                        case .masonry(let images):
+                            masonry(images, itemWidth: itemWidth)
                         }
-                        .frame(width: itemWidth)
                     }
                 }
                 .frame(maxWidth: .infinity, alignment: .top)
@@ -51,6 +48,7 @@ struct CatListView<ViewModel: CatListViewModelProtocol>: View {
             // Content scrolls under the Liquid Glass tab bar with a soft edge.
             .scrollEdgeEffectStyle(.soft, for: .bottom)
             .refreshable { await viewModel.loadImages() }
+            .defaultBackground()
         }
         .overlay {
             if viewModel.isLoading && viewModel.images.isEmpty {
@@ -68,6 +66,74 @@ struct CatListView<ViewModel: CatListViewModelProtocol>: View {
         .navigationTitle("Cats")
         .navigationBarTitleDisplayMode(.inline)
         .onAppear { viewModel.onAppear() }
+    }
+
+    // MARK: - Layout pieces
+
+    private func cell(for image: CatImage, width: CGFloat) -> some View {
+        Button {
+            viewModel.didSelect(image)
+        } label: {
+            CatImageCell(image: image, width: width)
+        }
+        .buttonStyle(.plain)
+    }
+
+    /// Waterfall block: each column is packed independently so the spacing
+    /// stays constant even though cells have different heights (a `LazyVGrid`
+    /// would align rows and leave gaps).
+    private func masonry(_ images: [CatImage], itemWidth: CGFloat) -> some View {
+        let columns = distributed(images, width: itemWidth)
+
+        return HStack(alignment: .top, spacing: spacing) {
+            ForEach(Array(columns.enumerated()), id: \.offset) { _, column in
+                VStack(spacing: spacing) {
+                    ForEach(column) { image in
+                        cell(for: image, width: itemWidth)
+                    }
+                }
+                .frame(width: itemWidth, alignment: .top)
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    // MARK: - Sectioning
+
+    private struct Section: Identifiable {
+        enum Kind {
+            case wide(CatImage)
+            case masonry([CatImage])
+        }
+
+        let id: String
+        let kind: Kind
+    }
+
+    /// Splits the feed so an image with an intrinsic width above
+    /// ``wideThreshold`` (640 px) takes a full-width row on its own, while the
+    /// rest keep flowing through the multi-column waterfall.
+    private func sections(for images: [CatImage]) -> [Section] {
+        var result: [Section] = []
+        var bucket: [CatImage] = []
+
+        func flush() {
+            guard let first = bucket.first else { return }
+            result.append(Section(id: "masonry-\(first.id)", kind: .masonry(bucket)))
+            bucket.removeAll()
+        }
+
+        for image in images {
+            if CGFloat(image.width) > wideThreshold {
+                flush()
+                result.append(Section(id: "wide-\(image.id)", kind: .wide(image)))
+            } else {
+                bucket.append(image)
+            }
+        }
+        flush()
+
+        return result
     }
 
     private func itemWidth(for totalWidth: CGFloat) -> CGFloat {
