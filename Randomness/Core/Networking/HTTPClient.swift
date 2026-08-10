@@ -81,13 +81,23 @@ struct HTTPClient: HTTPClientProtocol {
     private let session: URLSession
     private let decoder: JSONDecoder
 
-    init(session: URLSession = .shared, decoder: JSONDecoder = JSONDecoder()) {
+    /// Non-caching session: these endpoints return random payloads for the same
+    /// URL, so a cached response would make pull-to-refresh look like a no-op.
+    private static let defaultSession: URLSession = {
+        let configuration = URLSessionConfiguration.ephemeral
+        configuration.requestCachePolicy = .reloadIgnoringLocalAndRemoteCacheData
+        configuration.urlCache = nil
+        return URLSession(configuration: configuration)
+    }()
+
+    init(session: URLSession = HTTPClient.defaultSession, decoder: JSONDecoder = JSONDecoder()) {
         self.session = session
         self.decoder = decoder
     }
 
     nonisolated func request<T: Decodable & Sendable>(_ endpoint: EndpointProtocol, as type: T.Type) async throws -> T {
-        let request = try endpoint.urlRequest()
+        var request = try endpoint.urlRequest()
+        request.cachePolicy = .reloadIgnoringLocalAndRemoteCacheData
 
         let data: Data
         let response: URLResponse

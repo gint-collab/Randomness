@@ -30,6 +30,7 @@ final class CatFeedsViewModel: CatFeedsViewModelProtocol {
     private let service: CatServiceProtocol
     private let pageSize: Int
     private var didLoadInitialPage = false
+    private var loadMoreTask: Task<Void, Never>?
 
     init(image: CatImage? = nil, service: CatServiceProtocol, pageSize: Int = 10) {
         self.seedImage = image
@@ -48,9 +49,31 @@ final class CatFeedsViewModel: CatFeedsViewModelProtocol {
     }
 
     func refresh() async {
-        posts = seedImage.map { [CatPost(image: $0)] } ?? []
-        await loadFactForFirstPost()
-        await loadMore()
+        // Cancel any in-flight pagination, otherwise `loadMore`'s `isLoadingMore`
+        // guard makes the refresh return immediately and nothing happens.
+        loadMoreTask?.cancel()
+        loadMoreTask = nil
+        isLoadingMore = false
+        didLoadInitialPage = true
+
+        let seed = seedImage
+        let limit = pageSize
+
+        await perform { [weak self] in
+            guard let self else { return }
+            let newPosts = try await self.service.fetchPosts(offset: 0, limit: limit, seed: seed)
+
+            // Build the new feed off-screen and swap it in at the end, so the
+            // list is never emptied mid-refresh (which kills the pull gesture).
+            var refreshed = seed.map { [CatPost(image: $0)] } ?? []
+            refreshed.append(contentsOf: newPosts)
+
+            if !refreshed.isEmpty, refreshed[0].fact == nil {
+                refreshed[0].fact = try? await self.service.randomFact()
+            }
+
+            self.posts = refreshed
+        }
     }
 
     func loadMore() async {
@@ -69,6 +92,7 @@ final class CatFeedsViewModel: CatFeedsViewModelProtocol {
                 limit: self.pageSize,
                 seed: seed
             )
+            guard !Task.isCancelled else { return }
             self.posts.append(contentsOf: newPosts)
         }
     }
@@ -79,7 +103,9 @@ final class CatFeedsViewModel: CatFeedsViewModelProtocol {
         let thresholdIndex = posts.index(posts.endIndex, offsetBy: -3, limitedBy: posts.startIndex) ?? posts.startIndex
         guard let index = posts.firstIndex(where: { $0.id == currentItem.id }),
               index >= thresholdIndex else { return }
-        await loadMore()
+        let task = Task { await loadMore() }
+        loadMoreTask = task
+        await task.value
     }
 
     func toggleLike(_ post: CatPost) {

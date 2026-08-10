@@ -60,7 +60,7 @@ extension CatServiceProtocol {
 
 enum CatEndpoint: EndpointProtocol {
     case randomFact
-    case facts(limit: Int)
+    case facts(limit: Int, page: Int)
 
     var baseURL: URL { URL(string: "https://catfact.ninja")! }
 
@@ -74,7 +74,11 @@ enum CatEndpoint: EndpointProtocol {
     var queryItems: [URLQueryItem] {
         switch self {
         case .randomFact: return []
-        case .facts(let limit): return [URLQueryItem(name: "limit", value: "\(limit)")]
+        case .facts(let limit, let page):
+            return [
+                URLQueryItem(name: "limit", value: "\(limit)"),
+                URLQueryItem(name: "page", value: "\(page)")
+            ]
         }
     }
 }
@@ -113,7 +117,13 @@ struct CatService: CatServiceProtocol {
     }
 
     func facts(limit: Int) async throws -> [CatFact] {
-        try await client.request(CatEndpoint.facts(limit: limit), as: CatFactsPage.self).data
+        // `/facts` is paginated (not random), so page 1 would always return the
+        // same facts. Pick a random page to get fresh content on every refresh.
+        let page = Int.random(in: 1...max(1, 300 / max(1, limit)))
+        return try await client.request(
+            CatEndpoint.facts(limit: limit, page: page),
+            as: CatFactsPage.self
+        ).data
     }
 
     func images(limit: Int) async throws -> [CatImage] {

@@ -24,7 +24,8 @@ struct MockCatService: CatServiceProtocol {
     func images(limit: Int) async throws -> [CatImage] {
         if let error { throw error }
         let images = try JSONDecoder().decode([CatImage].self, from: Data(Self.sampleJSON.utf8))
-        return Array(images.prefix(limit))
+        // Shuffled so refreshing visibly changes the feed in previews.
+        return Array(images.shuffled().prefix(limit))
     }
 
     static let sampleJSON = """

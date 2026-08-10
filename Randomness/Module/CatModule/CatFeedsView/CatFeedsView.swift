@@ -48,6 +48,9 @@ struct CatFeedsView<ViewModel: CatFeedsViewModelProtocol>: View {
                     }
                 } else if viewModel.isLoading || viewModel.isLoadingMore {
                     CatFeedSkeleton()
+                        // Must not intercept touches, otherwise it blocks
+                        // pull-to-refresh on the scroll view underneath.
+                        .allowsHitTesting(false)
                 }
             }
         }
