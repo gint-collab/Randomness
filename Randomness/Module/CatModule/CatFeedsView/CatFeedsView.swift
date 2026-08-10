@@ -65,8 +65,6 @@ private struct CatPostCard: View {
     let post: CatPost
     let onLike: () -> Void
 
-    @State private var showComments = false
-
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
             header
@@ -147,14 +145,12 @@ private struct CatPostCard: View {
 
     private var counters: some View {
         HStack(spacing: 6) {
-            Image(systemName: "hand.thumbsup.fill")
+            Image(systemName: "heart.fill")
                 .font(.caption2)
                 .foregroundStyle(.white)
                 .padding(4)
-                .background(Color.accentColor, in: Circle())
+                .background(Color.pink, in: Circle())
             Text("\(post.likeCount)")
-            Spacer()
-            Text("\(post.commentCount) comments")
         }
         .font(.footnote)
         .foregroundStyle(.secondary)
@@ -166,17 +162,14 @@ private struct CatPostCard: View {
         HStack {
             actionButton(
                 title: "Like",
-                systemImage: post.isLiked ? "hand.thumbsup.fill" : "hand.thumbsup",
-                tint: post.isLiked ? Color.accentColor : .secondary,
+                systemImage: post.isLiked ? "heart.fill" : "heart",
+                tint: post.isLiked ? Color.pink : .secondary,
                 action: onLike
             )
-            actionButton(title: "Comment", systemImage: "text.bubble", tint: .secondary) {
-                showComments.toggle()
-            }
             ShareLink(item: URL(string: post.image.url) ?? URL(fileURLWithPath: "/")) {
                 Label("Share", systemImage: "arrowshape.turn.up.right")
                     .font(.subheadline.weight(.medium))
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(.blue)
                     .frame(maxWidth: .infinity)
             }
         }

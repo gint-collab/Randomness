@@ -66,7 +66,7 @@ struct CatTabbarView: View {
         // Native Liquid Glass behaviour: the bar minimizes while scrolling
         // down and expands again on scroll up.
         .tabBarMinimizeBehavior(.onScrollDown)
-        .tint(.accentColor)
+        .tint(.pink)
         .toolbarBackground(.visible, for: .tabBar)
         .navigationTitle(selection.title)
         .navigationBarTitleDisplayMode(.inline)

@@ -36,7 +36,7 @@ struct ChuckNorrisView<ViewModel: ChuckNorrisViewModelProtocol>: View {
             .disabled(viewModel.isLoading)
             .padding(16)
             .background(.clear)
-            .tint(Color(.orange))
+            .tint(Color.pink.opacity(0.9))
         }
         .overlay {
             if viewModel.isLoading && viewModel.joke == nil {
