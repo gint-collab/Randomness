@@ -9,7 +9,10 @@ import SwiftUI
 import Combine
 
 enum AppRoute: RouteProtocol {
-    case catDetail(CatImage)
+    /// Detail for a cat, carrying the list already loaded by the previous
+    /// screen so the detail view needs no extra request.
+    case catDetail(image: CatImage, related: [CatImage])
+    case catFeeds(CatImage)
     case catList
     case chuckNorris
 }
@@ -45,24 +48,30 @@ final class AppCoordinator: ObservableObject, AppCoordinating {
     func view(for route: AppRoute) -> some View {
         switch route {
         case .catList:
-            CatListView(
-                viewModel: CatListViewModel(
-                    service: self.dependencies.catService,
-                    onSelect: { [weak self] image in
-                        self?.push(.catDetail(image))
-                    }
-                )
+            CatTabbarView(
+                service: self.dependencies.catService,
+                onSelectImage: { [weak self] image, related in
+                    self?.push(.catDetail(image: image, related: related))
+                }
             )
-        case .catDetail(let image):
+        case .catDetail(let image, let related):
             CatDetailsView(
                 viewModel: CatDetailsViewModel(
                     image: image,
+                    relatedImages: related,
                     service: self.dependencies.catService
                 )
             )
         case .chuckNorris:
             ChuckNorrisView(
                 viewModel: ChuckNorrisViewModel(service: self.dependencies.chuckNorrisService)
+            )
+        case .catFeeds(let image):
+            CatFeedsView(
+                viewModel: CatFeedsViewModel(
+                    image: image,
+                    service: self.dependencies.catService
+                )
             )
         }
     }

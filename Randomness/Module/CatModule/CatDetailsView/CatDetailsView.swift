@@ -7,11 +7,16 @@
 
 import SwiftUI
 
+/// Single-cat detail screen: hero image, related thumbnails and a cat fact.
 struct CatDetailsView<ViewModel: CatDetailsViewModelProtocol>: View {
     @StateObject private var viewModel: ViewModel
 
-    init(viewModel: @autoclosure @escaping () -> ViewModel) {
+    /// Extra bottom inset so a floating tab bar never covers content.
+    private let bottomInset: CGFloat
+
+    init(viewModel: @autoclosure @escaping () -> ViewModel, bottomInset: CGFloat = 0) {
         _viewModel = StateObject(wrappedValue: viewModel())
+        self.bottomInset = bottomInset
     }
 
     private var image: CatImage { viewModel.image }
@@ -20,10 +25,11 @@ struct CatDetailsView<ViewModel: CatDetailsViewModelProtocol>: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 20) {
                 hero
+                relatedStrip
                 factSection
             }
             .padding(.horizontal, 16)
-            .padding(.bottom, 24)
+            .padding(.bottom, 24 + bottomInset)
         }
         .scrollIndicators(.hidden)
         .refreshable { await viewModel.loadFact() }
@@ -59,6 +65,57 @@ struct CatDetailsView<ViewModel: CatDetailsViewModelProtocol>: View {
         .frame(maxWidth: .infinity)
         .background(Color.gray.opacity(0.12))
         .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+        .animation(.easeInOut(duration: 0.2), value: image.id)
+    }
+
+    @ViewBuilder
+    private var relatedStrip: some View {
+        if viewModel.isLoadingRelated && viewModel.relatedImages.isEmpty {
+            ProgressView()
+                .frame(maxWidth: .infinity, alignment: .center)
+        } else if viewModel.relatedImages.count > 1 {
+            VStack(alignment: .leading, spacing: 8) {
+                Text("More cats")
+                    .font(.headline)
+
+                ScrollView(.horizontal) {
+                    HStack(spacing: 8) {
+                        ForEach(viewModel.relatedImages) { item in
+                            Button {
+                                viewModel.select(item)
+                            } label: {
+                                thumbnail(for: item)
+                            }
+                            .buttonStyle(.plain)
+                        }
+                    }
+                    .padding(.vertical, 2)
+                }
+                .scrollIndicators(.hidden)
+            }
+        }
+    }
+
+    private func thumbnail(for item: CatImage) -> some View {
+        let isSelected = item.id == image.id
+        return RemoteImage(url: item.url) { phase in
+            switch phase {
+            case .success(let loaded):
+                loaded.resizable().scaledToFill()
+            case .failure:
+                Color.gray.opacity(0.2)
+            case .empty:
+                ProgressView()
+            }
+        }
+        .frame(width: 72, height: 72)
+        .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+        .overlay {
+            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                .strokeBorder(isSelected ? Color.accentColor : .clear, lineWidth: 2)
+        }
+        .accessibilityLabel("Cat image \(item.id)")
+        .accessibilityAddTraits(isSelected ? [.isSelected, .isButton] : .isButton)
     }
 
     @ViewBuilder

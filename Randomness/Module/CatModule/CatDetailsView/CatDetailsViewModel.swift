@@ -12,7 +12,11 @@ import Combine
 protocol CatDetailsViewModelProtocol: LoadableViewModel {
     var image: CatImage { get }
     var fact: CatFact? { get }
+    var relatedImages: [CatImage] { get }
+    var isLoadingRelated: Bool { get }
     func loadFact() async
+    func loadRelatedImages() async
+    func select(_ image: CatImage)
 }
 
 @MainActor
@@ -20,19 +24,34 @@ final class CatDetailsViewModel: CatDetailsViewModelProtocol {
     @Published var isLoading: Bool = false
     @Published var errorMessage: String?
     @Published private(set) var fact: CatFact?
-
-    let image: CatImage
+    @Published private(set) var image: CatImage
+    @Published private(set) var relatedImages: [CatImage] = []
+    @Published private(set) var isLoadingRelated: Bool = false
 
     private let service: CatServiceProtocol
+    private let relatedLimit: Int
 
-    init(image: CatImage, service: CatServiceProtocol) {
+    /// - Parameter relatedImages: Images already loaded by the list screen.
+    ///   When non-empty no network call is made for related cats.
+    init(
+        image: CatImage,
+        relatedImages: [CatImage] = [],
+        service: CatServiceProtocol,
+        relatedLimit: Int = 10
+    ) {
         self.image = image
         self.service = service
+        self.relatedLimit = relatedLimit
+        self.relatedImages = Self.ordered(relatedImages, selecting: image)
     }
 
     func onAppear() {
-        guard fact == nil else { return }
-        Task { await loadFact() }
+        if fact == nil {
+            Task { await loadFact() }
+        }
+        if relatedImages.isEmpty {
+            Task { await loadRelatedImages() }
+        }
     }
 
     func loadFact() async {
@@ -40,5 +59,32 @@ final class CatDetailsViewModel: CatDetailsViewModelProtocol {
             guard let self else { return }
             self.fact = try await self.service.randomFact()
         }
+    }
+
+    func loadRelatedImages() async {
+        guard relatedImages.isEmpty else { return }
+        isLoadingRelated = true
+        defer { isLoadingRelated = false }
+        do {
+            let images = try await service.images(limit: relatedLimit)
+            relatedImages = Self.ordered(images, selecting: image)
+        } catch {
+            relatedImages = [image]
+        }
+    }
+
+    func select(_ image: CatImage) {
+        guard image.id != self.image.id else { return }
+        self.image = image
+    }
+
+    /// Keeps the current image first and drops duplicates.
+    private static func ordered(_ images: [CatImage], selecting image: CatImage) -> [CatImage] {
+        guard !images.isEmpty else { return [] }
+        var unique = [image]
+        for item in images where item.id != image.id {
+            unique.append(item)
+        }
+        return unique
     }
 }
