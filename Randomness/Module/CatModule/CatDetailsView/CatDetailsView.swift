@@ -58,7 +58,7 @@ struct CatDetailsView<ViewModel: CatDetailsViewModelProtocol>: View {
             case .failure:
                 placeholder(systemImage: "photo.badge.exclamationmark")
             case .empty:
-                placeholder(systemImage: nil)
+                ShimmerBlock(cornerRadius: 20)
             }
         }
         .aspectRatio(image.aspectRatio, contentMode: .fit)
@@ -71,7 +71,7 @@ struct CatDetailsView<ViewModel: CatDetailsViewModelProtocol>: View {
     @ViewBuilder
     private var relatedStrip: some View {
         if viewModel.isLoadingRelated && viewModel.relatedImages.isEmpty {
-            ProgressView()
+            ShimmerBlock(cornerRadius: 12)
                 .frame(maxWidth: .infinity, alignment: .center)
         } else if viewModel.relatedImages.count > 1 {
             VStack(alignment: .leading, spacing: 8) {
@@ -161,7 +161,7 @@ struct CatDetailsView<ViewModel: CatDetailsViewModelProtocol>: View {
                     .imageScale(.large)
                     .foregroundStyle(.secondary)
             } else {
-                ProgressView()
+                ShimmerBlock(cornerRadius: 20)
             }
         }
     }

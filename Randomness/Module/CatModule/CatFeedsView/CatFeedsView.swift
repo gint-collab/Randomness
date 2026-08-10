@@ -27,8 +27,7 @@ struct CatFeedsView<ViewModel: CatFeedsViewModelProtocol>: View {
                 }
 
                 if viewModel.isLoadingMore {
-                    ProgressView()
-                        .padding(.vertical, 24)
+                    CatPostSkeleton()
                 }
             }
             .padding(.vertical, 10)
@@ -49,7 +48,7 @@ struct CatFeedsView<ViewModel: CatFeedsViewModelProtocol>: View {
                         Button("Retry") { Task { await viewModel.refresh() } }
                     }
                 } else if viewModel.isLoading || viewModel.isLoadingMore {
-                    ProgressView()
+                    CatFeedSkeleton()
                 }
             }
         }
@@ -59,11 +58,62 @@ struct CatFeedsView<ViewModel: CatFeedsViewModelProtocol>: View {
     }
 }
 
+// MARK: - Loading skeletons
+
+/// Placeholder feed shown while the first page is loading.
+private struct CatFeedSkeleton: View {
+    var body: some View {
+        ScrollView {
+            VStack(spacing: 10) {
+                ForEach(0..<3, id: \.self) { _ in
+                    CatPostSkeleton()
+                }
+            }
+            .padding(.vertical, 10)
+        }
+        .scrollDisabled(true)
+        .background(Color(.systemGroupedBackground))
+        .accessibilityLabel("Loading cat feed")
+    }
+}
+
+/// Skeleton mirroring ``CatPostCard`` while posts are loading.
+private struct CatPostSkeleton: View {
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack(spacing: 10) {
+                ShimmerBlock.circle()
+                    .frame(width: 40, height: 40)
+                ShimmerText(lines: 2, lineHeight: 10)
+                    .frame(width: 160)
+                Spacer(minLength: 0)
+            }
+            .padding(.horizontal, 12)
+
+            ShimmerText(lines: 2)
+                .padding(.horizontal, 12)
+
+            ShimmerBlock(cornerRadius: 0)
+                .frame(height: 220)
+
+            ShimmerText(lines: 1, lineHeight: 10, lastLineWidth: 0.4)
+                .padding(.horizontal, 12)
+        }
+        .padding(.vertical, 12)
+        .background(Color(.systemBackground))
+        .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+        .padding(.horizontal, 8)
+        .accessibilityHidden(true)
+    }
+}
+
 // MARK: - Post card
 
 private struct CatPostCard: View {
     let post: CatPost
     let onLike: () -> Void
+
+    @State private var showComments = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
@@ -92,7 +142,7 @@ private struct CatPostCard: View {
                 case .success(let image):
                     image.resizable().scaledToFill()
                 default:
-                    Color.gray.opacity(0.2)
+                    ShimmerBlock.circle()
                 }
             }
             .frame(width: 40, height: 40)
@@ -133,24 +183,25 @@ private struct CatPostCard: View {
             case .failure:
                 placeholder(systemImage: "photo.badge.exclamationmark")
             case .empty:
-                placeholder(systemImage: nil)
+                ShimmerBlock(cornerRadius: 0)
             }
         }
         .aspectRatio(post.image.aspectRatio, contentMode: .fit)
         .frame(maxWidth: .infinity)
         .clipped()
-        .background(Color.gray.opacity(0.12))
         .accessibilityLabel("Cat image \(post.image.id)")
     }
 
     private var counters: some View {
         HStack(spacing: 6) {
-            Image(systemName: "heart.fill")
+            Image(systemName: "hand.thumbsup.fill")
                 .font(.caption2)
                 .foregroundStyle(.white)
                 .padding(4)
-                .background(Color.pink, in: Circle())
+                .background(Color.accentColor, in: Circle())
             Text("\(post.likeCount)")
+            Spacer()
+            Text("\(post.commentCount) comments")
         }
         .font(.footnote)
         .foregroundStyle(.secondary)
@@ -162,14 +213,17 @@ private struct CatPostCard: View {
         HStack {
             actionButton(
                 title: "Like",
-                systemImage: post.isLiked ? "heart.fill" : "heart",
-                tint: post.isLiked ? Color.pink : .secondary,
+                systemImage: post.isLiked ? "hand.thumbsup.fill" : "hand.thumbsup",
+                tint: post.isLiked ? Color.accentColor : .secondary,
                 action: onLike
             )
+            actionButton(title: "Comment", systemImage: "text.bubble", tint: .secondary) {
+                showComments.toggle()
+            }
             ShareLink(item: URL(string: post.image.url) ?? URL(fileURLWithPath: "/")) {
                 Label("Share", systemImage: "arrowshape.turn.up.right")
                     .font(.subheadline.weight(.medium))
-                    .foregroundStyle(.blue)
+                    .foregroundStyle(.secondary)
                     .frame(maxWidth: .infinity)
             }
         }
@@ -191,16 +245,12 @@ private struct CatPostCard: View {
         .buttonStyle(.plain)
     }
 
-    private func placeholder(systemImage: String?) -> some View {
+    private func placeholder(systemImage: String) -> some View {
         ZStack {
-            Color.clear
-            if let systemImage {
-                Image(systemName: systemImage)
-                    .imageScale(.large)
-                    .foregroundStyle(.secondary)
-            } else {
-                ProgressView()
-            }
+            Color.gray.opacity(0.12)
+            Image(systemName: systemImage)
+                .imageScale(.large)
+                .foregroundStyle(.secondary)
         }
     }
 }

@@ -44,6 +44,15 @@ extension View {
     @ViewBuilder
     func defaultBackground() -> some View {
         if #available(iOS 26.0, *) {
+            self.background(Color.black.opacity(0.8))
+        } else {
+            self
+        }
+    }
+    
+    @ViewBuilder
+    func cardBackground() -> some View {
+        if #available(iOS 26.0, *) {
             self.background(LinearGradient(colors: [Color.pink.opacity(0.8),
                                                     Color.red.opacity(0.8),
                                                     Color.purple.opacity(0.8)],

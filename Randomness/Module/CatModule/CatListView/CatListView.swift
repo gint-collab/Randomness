@@ -52,7 +52,11 @@ struct CatListView<ViewModel: CatListViewModelProtocol>: View {
         }
         .overlay {
             if viewModel.isLoading && viewModel.images.isEmpty {
-                ProgressView()
+                CatListSkeleton(
+                    columnCount: columnCount,
+                    spacing: spacing,
+                    horizontalPadding: horizontalPadding
+                )
             } else if let message = viewModel.errorMessage, viewModel.images.isEmpty {
                 ContentUnavailableView {
                     Label("Couldn't load cats", systemImage: "cat")
@@ -162,6 +166,36 @@ struct CatListView<ViewModel: CatListViewModelProtocol>: View {
     }
 }
 
+/// Placeholder grid shown while the first page of cats is loading.
+private struct CatListSkeleton: View {
+    let columnCount: Int
+    let spacing: CGFloat
+    let horizontalPadding: CGFloat
+
+    private let heights: [CGFloat] = [160, 220, 190, 140, 210, 170]
+
+    var body: some View {
+        ScrollView {
+            LazyVGrid(
+                columns: Array(
+                    repeating: GridItem(.flexible(), spacing: spacing),
+                    count: columnCount
+                ),
+                spacing: spacing
+            ) {
+                ForEach(Array(heights.enumerated()), id: \.offset) { _, height in
+                    ShimmerBlock(cornerRadius: 12)
+                        .frame(height: height)
+                }
+            }
+            .padding(.horizontal, horizontalPadding)
+            .padding(.vertical, spacing)
+        }
+        .scrollDisabled(true)
+        .accessibilityLabel("Loading cats")
+    }
+}
+
 /// Renders a single image using the intrinsic size reported by the API,
 /// so each cell keeps the original aspect ratio.
 private struct CatImageCell: View {
@@ -182,7 +216,7 @@ private struct CatImageCell: View {
                     .imageScale(.large)
                     .foregroundStyle(.secondary)
             case .empty:
-                ProgressView()
+                ShimmerBlock(cornerRadius: 12)
             }
         }
         .frame(width: width, height: height)
