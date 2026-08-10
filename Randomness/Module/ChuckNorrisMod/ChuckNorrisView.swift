@@ -16,11 +16,17 @@ struct ChuckNorrisView<ViewModel: ChuckNorrisViewModelProtocol>: View {
 
     var body: some View {
         ScrollView {
-            if let joke = viewModel.joke {
-                JokeCard(joke: joke)
-                    .padding(.horizontal, 16)
-                    .padding(.top, 24)
+            Group {
+                if let joke = viewModel.joke {
+                    JokeCard(joke: joke)
+                } else {
+                    JokeCardSkeleton()
+                        .shimmering(isActive: viewModel.isLoading, configuration: .subtle)
+                }
             }
+            .padding(.horizontal, 16)
+            .padding(.top, 24)
+            .animation(.easeInOut(duration: 0.25), value: viewModel.joke)
         }
         .scrollIndicators(.hidden)
         .refreshable { await viewModel.loadJoke() }
@@ -39,9 +45,7 @@ struct ChuckNorrisView<ViewModel: ChuckNorrisViewModelProtocol>: View {
             .tint(Color.pink.opacity(0.9))
         }
         .overlay {
-            if viewModel.isLoading && viewModel.joke == nil {
-                ProgressView()
-            } else if let message = viewModel.errorMessage, viewModel.joke == nil {
+            if let message = viewModel.errorMessage, viewModel.joke == nil {
                 ContentUnavailableView {
                     Label("Couldn't load a joke", systemImage: "exclamationmark.triangle")
                 } description: {
@@ -54,6 +58,23 @@ struct ChuckNorrisView<ViewModel: ChuckNorrisViewModelProtocol>: View {
         .navigationTitle("Chuck Norris")
         .navigationBarTitleDisplayMode(.inline)
         .onAppear { viewModel.onAppear() }
+    }
+}
+
+/// Placeholder mirroring ``JokeCard`` while the first joke is loading.
+private struct JokeCardSkeleton: View {
+    var body: some View {
+        VStack(spacing: 20) {
+            ShimmerBlock(cornerRadius: 16)
+                .frame(width: 96, height: 96)
+
+            ShimmerText(lines: 4, lineHeight: 16, spacing: 12, lastLineWidth: 0.5)
+        }
+        .padding(24)
+        .frame(maxWidth: .infinity)
+        .cardBackground()
+        .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+        .accessibilityLabel("Loading a joke")
     }
 }
 
@@ -71,7 +92,7 @@ private struct JokeCard: View {
                         .imageScale(.large)
                         .foregroundStyle(.secondary)
                 case .empty:
-                    ProgressView()
+                    ShimmerBlock(cornerRadius: 16)
                 }
             }
             .frame(width: 96, height: 96)
@@ -94,7 +115,7 @@ private struct JokeCard: View {
         }
         .padding(24)
         .frame(maxWidth: .infinity)
-        .defaultBackground()
+        .cardBackground()
         .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
         .accessibilityElement(children: .combine)
     }

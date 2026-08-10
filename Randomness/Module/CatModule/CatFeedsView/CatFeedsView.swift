@@ -32,7 +32,6 @@ struct CatFeedsView<ViewModel: CatFeedsViewModelProtocol>: View {
             }
             .padding(.vertical, 10)
         }
-        .background(Color(.systemGroupedBackground))
         .scrollIndicators(.hidden)
         // Lets content scroll under the Liquid Glass tab bar while staying legible.
         .scrollEdgeEffectStyle(.soft, for: .bottom)
@@ -52,6 +51,7 @@ struct CatFeedsView<ViewModel: CatFeedsViewModelProtocol>: View {
                 }
             }
         }
+        .defaultBackground()
         .navigationTitle("Cat Feed")
         .navigationBarTitleDisplayMode(.inline)
         .onAppear { viewModel.onAppear() }
@@ -100,7 +100,6 @@ private struct CatPostSkeleton: View {
                 .padding(.horizontal, 12)
         }
         .padding(.vertical, 12)
-        .background(Color(.systemBackground))
         .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
         .padding(.horizontal, 8)
         .accessibilityHidden(true)
@@ -194,7 +193,7 @@ private struct CatPostCard: View {
 
     private var counters: some View {
         HStack(spacing: 6) {
-            Image(systemName: "hand.thumbsup.fill")
+            Image(systemName: "heart.fill")
                 .font(.caption2)
                 .foregroundStyle(.white)
                 .padding(4)
@@ -213,17 +212,14 @@ private struct CatPostCard: View {
         HStack {
             actionButton(
                 title: "Like",
-                systemImage: post.isLiked ? "hand.thumbsup.fill" : "hand.thumbsup",
+                systemImage: post.isLiked ? "heart.fill" : "heart",
                 tint: post.isLiked ? Color.accentColor : .secondary,
                 action: onLike
             )
-            actionButton(title: "Comment", systemImage: "text.bubble", tint: .secondary) {
-                showComments.toggle()
-            }
             ShareLink(item: URL(string: post.image.url) ?? URL(fileURLWithPath: "/")) {
                 Label("Share", systemImage: "arrowshape.turn.up.right")
                     .font(.subheadline.weight(.medium))
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(.primary)
                     .frame(maxWidth: .infinity)
             }
         }
