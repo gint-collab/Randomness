@@ -101,7 +101,9 @@ enum CatImageEndpoint: EndpointProtocol {
     }
 }
 
-private nonisolated struct CatFactsPage: Decodable, Sendable {
+/// Envelope returned by `catfact.ninja/facts`.
+/// Internal (not private) so tests can build it as a fixture.
+nonisolated struct CatFactsPage: Decodable, Sendable {
     let data: [CatFact]
 }
 
