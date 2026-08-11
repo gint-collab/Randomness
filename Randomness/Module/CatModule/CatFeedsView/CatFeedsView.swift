@@ -35,7 +35,11 @@ struct CatFeedsView<ViewModel: CatFeedsViewModelProtocol>: View {
         .scrollIndicators(.hidden)
         // Lets content scroll under the Liquid Glass tab bar while staying legible.
         .scrollEdgeEffectStyle(.soft, for: .bottom)
-        .refreshable { await viewModel.refresh() }
+        .refreshable {
+            Task {
+                await viewModel.refresh()
+            }
+        }
         .overlay {
             if viewModel.posts.isEmpty {
                 if let message = viewModel.errorMessage {
