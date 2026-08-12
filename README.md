@@ -68,6 +68,11 @@ No API keys are required.
 | --- | --- | --- | --- | --- |
 | <img width="300" height="650" alt="Simulator Screenshot - iPhone 17 - 2026-08-13 at 03 03 04" src="https://github.com/user-attachments/assets/12f3b50b-d750-4c6e-8e48-cc2e09854c2f" /> | <img width="300" height="650" alt="Simulator Screenshot - iPhone 17 - 2026-08-13 at 03 03 09" src="https://github.com/user-attachments/assets/70ab3742-148c-47c2-9e4e-589a5ba2702d" /> | <img width="300" height="650" alt="Simulator Screenshot - iPhone 17 - 2026-08-13 at 03 03 29" src="https://github.com/user-attachments/assets/96465b1c-575c-481b-a45c-800c61a19ed1" /> | <img width="300" height="650" alt="Simulator Screenshot - iPhone 17 - 2026-08-13 at 03 12 32" src="https://github.com/user-attachments/assets/f1205205-e574-4689-96ac-3dbf64f9c9bd" /> | <img width="300" height="650" alt="Simulator Screenshot - iPhone 17 - 2026-08-13 at 03 06 16" src="https://github.com/user-attachments/assets/9f8d0340-4773-4206-baf1-f0986e9b2c39" /> |
 
+## 📸 Churk Norris / Demo
+| Landing Page |
+| --- |
+| <img width="300" height="650" alt="Simulator Screenshot - iPhone 17 - 2026-08-13 at 03 05 04" src="https://github.com/user-attachments/assets/cd616aa1-d0f0-4092-beb7-895c9b202401" /> |
+
 ## 🚀 How to Run the Project
 
 1. Clone the repository: `git clone https://github.com`
