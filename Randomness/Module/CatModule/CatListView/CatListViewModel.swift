@@ -39,7 +39,9 @@ final class CatListViewModel: CatListViewModelProtocol {
 
     func onAppear() {
         guard images.isEmpty else { return }
-        Task { await loadImages() }
+        // `[weak self]`: an unstructured task captures self strongly and would
+        // outlive the screen for the duration of the request.
+        Task { [weak self] in await self?.loadImages() }
     }
 
     func loadImages() async {

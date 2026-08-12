@@ -17,6 +17,7 @@ protocol CatDetailsViewModelProtocol: LoadableViewModel {
     func loadFact() async
     func loadRelatedImages() async
     func select(_ image: CatImage)
+    func cancelPendingWork()
 }
 
 @MainActor
@@ -30,6 +31,7 @@ final class CatDetailsViewModel: CatDetailsViewModelProtocol {
 
     private let service: CatServiceProtocol
     private let relatedLimit: Int
+    private var tasks: [Task<Void, Never>] = []
 
     /// - Parameter relatedImages: Images already loaded by the list screen.
     ///   When non-empty no network call is made for related cats.
@@ -46,12 +48,28 @@ final class CatDetailsViewModel: CatDetailsViewModelProtocol {
     }
 
     func onAppear() {
+        // `[weak self]` + tracked tasks: unstructured tasks otherwise keep the
+        // view model alive for the whole request after the screen is popped.
+        // Each closure needs two statements so it infers `Void` rather than
+        // `Void?`, which wouldn't match `Task<Void, Never>`.
         if fact == nil {
-            Task { await loadFact() }
+            tasks.append(Task { [weak self] in
+                guard let self else { return }
+                await self.loadFact()
+            })
         }
         if relatedImages.isEmpty {
-            Task { await loadRelatedImages() }
+            tasks.append(Task { [weak self] in
+                guard let self else { return }
+                await self.loadRelatedImages()
+            })
         }
+    }
+
+    /// Cancels any in-flight work. Call from the view's `onDisappear`.
+    func cancelPendingWork() {
+        tasks.forEach { $0.cancel() }
+        tasks.removeAll()
     }
 
     func loadFact() async {

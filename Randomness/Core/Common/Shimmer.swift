@@ -105,13 +105,17 @@ private struct ShimmerModifier: ViewModifier {
                     }
                 }
                 .mask(content)
-                .task(id: isActive) { await animate() }
+                .onAppear { startAnimating() }
+                // `repeatForever` never ends on its own, so it keeps ticking
+                // (and keeps the view's storage alive) after the skeleton is
+                // scrolled away. Explicitly stop it when the view goes away.
+                .onDisappear { stopAnimating() }
         } else {
             content
         }
     }
 
-    private func animate() async {
+    private func startAnimating() {
         guard isActive, !reduceMotion else { return }
         phase = -1
         withAnimation(
@@ -121,6 +125,10 @@ private struct ShimmerModifier: ViewModifier {
         ) {
             phase = 1
         }
+    }
+
+    private func stopAnimating() {
+        withAnimation(.linear(duration: 0)) { phase = -1 }
     }
 }
 

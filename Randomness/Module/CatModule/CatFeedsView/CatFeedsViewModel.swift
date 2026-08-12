@@ -17,6 +17,7 @@ protocol CatFeedsViewModelProtocol: LoadableViewModel {
     func refresh() async
     func loadMoreIfNeeded(currentItem: CatPost) async
     func toggleLike(_ post: CatPost)
+    func cancelPendingWork()
 }
 
 @MainActor
@@ -31,6 +32,7 @@ final class CatFeedsViewModel: CatFeedsViewModelProtocol {
     private let pageSize: Int
     private var didLoadInitialPage = false
     private var loadMoreTask: Task<Void, Never>?
+    private var initialLoadTask: Task<Void, Never>?
 
     init(image: CatImage? = nil, service: CatServiceProtocol, pageSize: Int = 10) {
         self.seedImage = image
@@ -42,10 +44,22 @@ final class CatFeedsViewModel: CatFeedsViewModelProtocol {
     func onAppear() {
         guard !didLoadInitialPage else { return }
         didLoadInitialPage = true
-        Task {
-            await loadFactForFirstPost()
-            await loadMore()
+        initialLoadTask?.cancel()
+        // `[weak self]` so the detached task never keeps the view model alive
+        // after the screen is dismissed.
+        initialLoadTask = Task { [weak self] in
+            await self?.loadFactForFirstPost()
+            await self?.loadMore()
+            self?.initialLoadTask = nil
         }
+    }
+
+    /// Cancels any in-flight work. Call from the view's `onDisappear`.
+    func cancelPendingWork() {
+        initialLoadTask?.cancel()
+        initialLoadTask = nil
+        loadMoreTask?.cancel()
+        loadMoreTask = nil
     }
 
     func refresh() async {
@@ -103,9 +117,15 @@ final class CatFeedsViewModel: CatFeedsViewModelProtocol {
         let thresholdIndex = posts.index(posts.endIndex, offsetBy: -3, limitedBy: posts.startIndex) ?? posts.startIndex
         guard let index = posts.firstIndex(where: { $0.id == currentItem.id }),
               index >= thresholdIndex else { return }
-        let task = Task { await loadMore() }
+        // Two statements so the closure infers `Void` rather than `Void?`,
+        // which wouldn't match `Task<Void, Never>`.
+        let task = Task { [weak self] in
+            guard let self else { return }
+            await self.loadMore()
+        }
         loadMoreTask = task
         await task.value
+        if loadMoreTask == task { loadMoreTask = nil }
     }
 
     func toggleLike(_ post: CatPost) {

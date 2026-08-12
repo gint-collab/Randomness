@@ -28,7 +28,7 @@ final class ChuckNorrisViewModel: ChuckNorrisViewModelProtocol {
 
     func onAppear() {
         guard joke == nil else { return }
-        Task { await loadJoke() }
+        Task { [weak self] in await self?.loadJoke() }
     }
 
     func loadJoke() async {

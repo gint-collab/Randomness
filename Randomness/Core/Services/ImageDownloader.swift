@@ -109,7 +109,14 @@ actor ImageDownloader: ImageDownloading {
         }
 
         inFlight[url] = task
-        defer { inFlight[url] = nil }
+
+        // Clear the entry from inside the actor once the work finishes, rather
+        // than in a `defer` on the *calling* task: a cancelled caller would
+        // otherwise drop an entry that other callers are still awaiting, and a
+        // task stored after a newer one would evict the newer entry.
+        defer {
+            if inFlight[url] == task { inFlight[url] = nil }
+        }
         return try await task.value
     }
 

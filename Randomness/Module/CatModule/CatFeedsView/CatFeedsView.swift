@@ -36,9 +36,9 @@ struct CatFeedsView<ViewModel: CatFeedsViewModelProtocol>: View {
         // Lets content scroll under the Liquid Glass tab bar while staying legible.
         .scrollEdgeEffectStyle(.soft, for: .bottom)
         .refreshable {
-            Task {
-                await viewModel.refresh()
-            }
+            // Awaited directly: wrapping in a detached `Task` both ends the
+            // refresh indicator early and leaks an uncancellable task.
+            await viewModel.refresh()
         }
         .overlay {
             if viewModel.posts.isEmpty {
@@ -62,6 +62,7 @@ struct CatFeedsView<ViewModel: CatFeedsViewModelProtocol>: View {
         .navigationTitle("Cat Feed")
         .navigationBarTitleDisplayMode(.inline)
         .onAppear { viewModel.onAppear() }
+        .onDisappear { viewModel.cancelPendingWork() }
     }
 }
 
@@ -206,7 +207,7 @@ private struct CatPostCard: View {
                 .background(Color.accentColor, in: Circle())
             Text("\(post.likeCount)")
             Spacer()
-            Text("\(post.commentCount) comments")
+//            Text("\(post.commentCount) comments")
         }
         .font(.footnote)
         .foregroundStyle(.secondary)

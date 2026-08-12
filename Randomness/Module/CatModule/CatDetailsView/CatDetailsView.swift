@@ -62,6 +62,7 @@ struct CatDetailsView<ViewModel: CatDetailsViewModelProtocol>: View {
             }
         }
         .onAppear { viewModel.onAppear() }
+        .onDisappear { viewModel.cancelPendingWork() }
     }
 
     // MARK: - Sections
