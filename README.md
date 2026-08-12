@@ -66,7 +66,8 @@ No API keys are required.
 
 | Main Dashboard | Cat Gallery | Cat Feed | Cat Detail |
 | --- | --- | --- | --- |
-| [Drop Image Link Here] | [Drop Image Link Here] | [Drop Image Link Here] | [Drop Image Link Here] |
+| <img width="1206" height="2622" alt="Simulator Screenshot - iPhone 17 - 2026-08-13 at 03 03 04" src="https://github.com/user-attachments/assets/12f3b50b-d750-4c6e-8e48-cc2e09854c2f" />
+ | [Drop Image Link Here] | [Drop Image Link Here] | [Drop Image Link Here] |
 
 ## 🚀 How to Run the Project
 
