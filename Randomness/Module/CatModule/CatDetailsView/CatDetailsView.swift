@@ -21,11 +21,29 @@ struct CatDetailsView<ViewModel: CatDetailsViewModelProtocol>: View {
 
     private var image: CatImage { viewModel.image }
 
+    /// Drives the paging carousel; kept in sync with the view model selection.
+    @State private var carouselID: String?
+
+    /// Images shown in the carousel (falls back to the single hero image).
+    private var carouselImages: [CatImage] {
+        viewModel.relatedImages.isEmpty ? [image] : viewModel.relatedImages
+    }
+
+    /// Measured width of the carousel so card height can follow the image ratio.
+    private let minCardHeight: CGFloat = 220
+    private let maxCardHeight: CGFloat = 520
+
+    /// Single source of truth for every rounded corner on this screen.
+    private let cornerRadius: CGFloat = 24
+
+    private var cardShape: RoundedRectangle {
+        RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+    }
+
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 20) {
-                hero
-                relatedStrip
+                carousel
                 factSection
             }
             .padding(.horizontal, 16)
@@ -33,7 +51,7 @@ struct CatDetailsView<ViewModel: CatDetailsViewModelProtocol>: View {
         }
         .scrollIndicators(.hidden)
         .refreshable { await viewModel.loadFact() }
-        .navigationTitle("Cat")
+        .navigationTitle("Cat Fact")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
@@ -48,74 +66,51 @@ struct CatDetailsView<ViewModel: CatDetailsViewModelProtocol>: View {
 
     // MARK: - Sections
 
-    private var hero: some View {
-        RemoteImage(url: image.url) { phase in
-            switch phase {
-            case .success(let loaded):
-                loaded
-                    .resizable()
-                    .scaledToFit()
-            case .failure:
-                placeholder(systemImage: "photo.badge.exclamationmark")
-            case .empty:
-                ShimmerBlock(cornerRadius: 20)
-            }
-        }
-        .aspectRatio(image.aspectRatio, contentMode: .fit)
-        .frame(maxWidth: .infinity)
-        .background(Color.gray.opacity(0.12))
-        .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
-        .animation(.easeInOut(duration: 0.2), value: image.id)
-    }
-
+    /// Full-bleed paging carousel that replaces the old hero + thumbnail strip.
     @ViewBuilder
-    private var relatedStrip: some View {
+    private var carousel: some View {
         if viewModel.isLoadingRelated && viewModel.relatedImages.isEmpty {
-            ShimmerBlock(cornerRadius: 12)
-                .frame(maxWidth: .infinity, alignment: .center)
-        } else if viewModel.relatedImages.count > 1 {
-            VStack(alignment: .leading, spacing: 8) {
-                Text("More cats")
-                    .font(.headline)
-
-                ScrollView(.horizontal) {
-                    HStack(spacing: 8) {
-                        ForEach(viewModel.relatedImages) { item in
-                            Button {
-                                viewModel.select(item)
-                            } label: {
-                                thumbnail(for: item)
-                            }
-                            .buttonStyle(.plain)
-                        }
-                    }
-                    .padding(.vertical, 2)
-                }
-                .scrollIndicators(.hidden)
+            ShimmerBlock(cornerRadius: cornerRadius)
+                .frame(maxWidth: .infinity)
+                .frame(height: 320)
+        } else {
+            Carousel(
+                items: carouselImages,
+                selection: $carouselID,
+                aspectRatio: { $0.aspectRatio },
+                style: carouselStyle
+            ) { item in
+                Hero(
+                    url: item.url,
+                    aspectRatio: item.aspectRatio,
+                    id: item.id,
+                    cornerRadius: cornerRadius,
+                    background: .clear
+                )
+                .accessibilityLabel("Cat image \(item.id)")
+                .accessibilityAddTraits(item.id == image.id ? .isSelected : [])
+            }
+            .onAppear { carouselID = image.id }
+            .onChange(of: carouselID) { _, newValue in
+                guard
+                    let newValue,
+                    let selected = carouselImages.first(where: { $0.id == newValue })
+                else { return }
+                viewModel.select(selected)
+            }
+            .onChange(of: image.id) { _, newValue in
+                guard carouselID != newValue else { return }
+                withAnimation(.snappy) { carouselID = newValue }
             }
         }
     }
 
-    private func thumbnail(for item: CatImage) -> some View {
-        let isSelected = item.id == image.id
-        return RemoteImage(url: item.url) { phase in
-            switch phase {
-            case .success(let loaded):
-                loaded.resizable().scaledToFill()
-            case .failure:
-                Color.gray.opacity(0.2)
-            case .empty:
-                ProgressView()
-            }
-        }
-        .frame(width: 72, height: 72)
-        .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
-        .overlay {
-            RoundedRectangle(cornerRadius: 12, style: .continuous)
-                .strokeBorder(isSelected ? Color.accentColor : .clear, lineWidth: 2)
-        }
-        .accessibilityLabel("Cat image \(item.id)")
-        .accessibilityAddTraits(isSelected ? [.isSelected, .isButton] : .isButton)
+    private var carouselStyle: CarouselStyle {
+        var style = CarouselStyle.default
+        style.cornerRadius = cornerRadius
+        style.minHeight = minCardHeight
+        style.maxHeight = maxCardHeight
+        return style
     }
 
     @ViewBuilder
@@ -150,20 +145,7 @@ struct CatDetailsView<ViewModel: CatDetailsViewModelProtocol>: View {
         .padding(16)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(Color.gray.opacity(0.08))
-        .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-    }
-
-    private func placeholder(systemImage: String?) -> some View {
-        ZStack {
-            Color.clear
-            if let systemImage {
-                Image(systemName: systemImage)
-                    .imageScale(.large)
-                    .foregroundStyle(.secondary)
-            } else {
-                ShimmerBlock(cornerRadius: 20)
-            }
-        }
+        .clipShape(cardShape)
     }
 }
 
