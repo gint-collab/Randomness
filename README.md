@@ -71,7 +71,7 @@ No API keys are required.
 ## 📸 Churk Norris / Demo
 | Landing Page |
 | --- |
-| <img width="300" height="650" alt="Simulator Screenshot - iPhone 17 - 2026-08-13 at 03 05 04" src="https://github.com/user-attachments/assets/cd616aa1-d0f0-4092-beb7-895c9b202401" /> |
+| <img width="250" height="600" alt="Simulator Screenshot - iPhone 17 - 2026-08-13 at 03 05 04" src="https://github.com/user-attachments/assets/cd616aa1-d0f0-4092-beb7-895c9b202401" /> |
 
 ## 🚀 How to Run the Project
 
