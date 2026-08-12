@@ -55,10 +55,9 @@ struct CatDetailsView<ViewModel: CatDetailsViewModelProtocol>: View {
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
-                ShareLink(item: URL(string: image.url) ?? URL(fileURLWithPath: "/")) {
-                    Image(systemName: "square.and.arrow.up")
-                }
-                .disabled(URL(string: image.url) == nil)
+                // Shares the picture itself and saves it to Photos; both are
+                // served from the image cache for the cat already on screen.
+                ImageActionsMenu(url: image.url, title: "Cat \(image.id)")
             }
         }
         .onAppear { viewModel.onAppear() }
