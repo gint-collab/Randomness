@@ -16,7 +16,7 @@ struct LandingView<ViewModel: LandingViewModelProtocol>: View {
     
     var body: some View {
         ZStack {
-            LinearGradient(colors: [Color.blue.opacity(0.5), Color.white], startPoint: .topLeading, endPoint: .bottomTrailing).ignoresSafeArea()
+            LinearGradient(colors: [Color.blue.opacity(0.7), Color.red.opacity(0.7)], startPoint: .topLeading, endPoint: .bottomTrailing).ignoresSafeArea()
             
             VStack(spacing: 24) {
                 VStack(spacing: 12) {

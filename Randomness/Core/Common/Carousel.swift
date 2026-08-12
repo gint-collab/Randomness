@@ -21,7 +21,7 @@ struct CarouselStyle {
     var showsPageIndicator: Bool = true
     var background: Color = .gray.opacity(0.12)
     var borderColor: Color = .primary.opacity(0.06)
-    var shadowRadius: CGFloat = 24
+    var shadowRadius: CGFloat = 0
 
     static var `default`: CarouselStyle { CarouselStyle() }
 }
@@ -122,6 +122,8 @@ struct Carousel<Item: Identifiable, Content: View>: View {
         content(item)
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .background(style.background)
+            // The rounded `clipShape` already trims overflow, so no extra
+            // rectangular `.clipped()` (which would square the corners).
             .clipShape(shape)
             .contentShape(shape)
             .overlay {
@@ -130,7 +132,11 @@ struct Carousel<Item: Identifiable, Content: View>: View {
             // Flatten the clipped card before the scroll transition applies its
             // 3D transform, otherwise the rounded corners render squared off.
             .compositingGroup()
-            .shadow(color: .black.opacity(0.15), radius: style.shadowRadius, y: 6)
+            .shadow(
+                color: .black.opacity(style.shadowRadius > 0 ? 0.15 : 0),
+                radius: style.shadowRadius,
+                y: 6
+            )
     }
 
     private var pageIndicator: some View {

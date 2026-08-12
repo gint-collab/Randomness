@@ -84,7 +84,8 @@ struct CatDetailsView<ViewModel: CatDetailsViewModelProtocol>: View {
                     url: item.url,
                     aspectRatio: item.aspectRatio,
                     id: item.id,
-                    cornerRadius: cornerRadius,
+                    cornerRadius: 0,
+                    contentMode: .fill,
                     background: .clear
                 )
                 .accessibilityLabel("Cat image \(item.id)")
