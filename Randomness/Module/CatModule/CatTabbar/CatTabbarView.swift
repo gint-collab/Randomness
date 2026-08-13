@@ -63,9 +63,9 @@ struct CatTabbarView: View {
                 CatFeedsView(viewModel: CatFeedsViewModel(service: service))
             }
         }
-        // Native Liquid Glass behaviour: the bar minimizes while scrolling
-        // down and expands again on scroll up.
-        .tabBarMinimizeBehavior(.onScrollDown)
+        // Native Liquid Glass behaviour on iOS 26: the bar minimizes while
+        // scrolling down and expands again on scroll up. No-op on iOS 18.
+        .liquidGlassTabBar()
         .tint(.pink)
         .toolbarBackground(.visible, for: .tabBar)
         .navigationTitle(selection.title)
@@ -75,6 +75,10 @@ struct CatTabbarView: View {
 
 /// Small glass accessory that rides above the tab bar, the way Music and
 /// Podcasts show their now-playing bar.
+///
+/// The bottom tab-view accessory is an iOS 26 affordance, so this whole view is
+/// gated behind that availability; on iOS 18 the tab bar simply has no accessory.
+@available(iOS 26.0, *)
 private struct CatTabAccessory: View {
     @Environment(\.tabViewBottomAccessoryPlacement) private var placement
     let tab: CatTab

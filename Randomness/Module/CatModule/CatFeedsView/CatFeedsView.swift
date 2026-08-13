@@ -34,7 +34,7 @@ struct CatFeedsView<ViewModel: CatFeedsViewModelProtocol>: View {
         }
         .scrollIndicators(.hidden)
         // Lets content scroll under the Liquid Glass tab bar while staying legible.
-        .scrollEdgeEffectStyle(.soft, for: .bottom)
+        .softBottomScrollEdge()
         .refreshable {
             // Awaited directly: wrapping in a detached `Task` both ends the
             // refresh indicator early and leaks an uncancellable task.

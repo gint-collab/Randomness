@@ -40,6 +40,30 @@ extension View {
             self
         }
     }
+
+    /// Softens the bottom scroll edge so content stays legible as it passes
+    /// under the glass tab bar. No-op before iOS 26, where the bar is opaque
+    /// and content never scrolls beneath it.
+    @ViewBuilder
+    func softBottomScrollEdge() -> some View {
+        if #available(iOS 26.0, *) {
+            self.scrollEdgeEffectStyle(.soft, for: .bottom)
+        } else {
+            self
+        }
+    }
+
+    /// Prominent call-to-action button style: Liquid Glass on iOS 26,
+    /// the classic bordered-prominent capsule before that.
+    @ViewBuilder
+    func prominentActionButtonStyle() -> some View {
+        if #available(iOS 26.0, *) {
+            self.buttonStyle(.glassProminent)
+        } else {
+            self.buttonStyle(.borderedProminent)
+        }
+    }
+
     
     /// Screen-level background matching native iOS grouped screens.
     /// Adapts automatically to light/dark mode.

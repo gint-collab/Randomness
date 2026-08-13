@@ -37,7 +37,7 @@ struct ChuckNorrisView<ViewModel: ChuckNorrisViewModelProtocol>: View {
                 Label("Another one", systemImage: "arrow.clockwise")
                     .frame(maxWidth: .infinity)
             }
-            .buttonStyle(.glassProminent)
+            .prominentActionButtonStyle()
             .controlSize(.large)
             .disabled(viewModel.isLoading)
             .padding(16)

@@ -12,7 +12,7 @@ A native iOS application built with Swift and SwiftUI that serves up random cont
 * **Chuck Norris jokes:** A card-based screen with pull-to-refresh and a Liquid Glass "Another one" button.
 * **Custom image pipeline:** An `actor`-based downloader with an `NSCache` layer (200 items / ~100 MB) and request coalescing, so concurrent requests for the same URL share a single download.
 * **Shimmer loading states:** Every screen renders a skeleton that mirrors its real layout while the first page loads, instead of a bare spinner.
-* **Liquid Glass UI:** Native `TabView` with `.tabBarMinimizeBehavior(.onScrollDown)`, soft scroll-edge effects and glass-prominent buttons.
+* **Liquid Glass UI:** On iOS 26 the tab bar minimizes on scroll, scroll edges soften and call-to-action buttons use the glass-prominent style. Every one of these is behind an `#available` check, so the app degrades cleanly to standard SwiftUI chrome on iOS 18yle. Every one of these is behind an `#available` check, so the app degrades cleanly to standard SwiftUI chrome on iOS 18.
 * **Accessibility & Dark Mode:** Semantic labels and traits throughout, dynamic-type-friendly text, and system materials that adapt to the active appearance.
 
 ## 🛠 Tech Stack & Architecture
@@ -23,7 +23,7 @@ A native iOS application built with Swift and SwiftUI that serves up random cont
 * **Concurrency:** Swift Concurrency (async/await, actors, `TaskGroup`)
 * **Networking:** Custom `URLSession` layer — no third-party dependencies
 * **Dependency Manager:** Swift Package Manager (SPM)
-* **Minimum iOS:** 26.2
+* **Minimum iOS:** 18.6 (Liquid Glass enhancements light up on iOS 26+)
 
 ### Project structure
 
@@ -51,6 +51,8 @@ Randomness/
 * **Cache-free session.** These endpoints return random payloads for the same URL, so the client uses an ephemeral, cache-free `URLSession` — otherwise pull-to-refresh would look like a no-op.
 * **Randomised fact pages.** `catfact.ninja/facts` is paginated rather than random, so the service requests a random page to keep refreshes interesting.
 * **Deliberate task lifetimes.** View models capture `self` weakly, track their unstructured tasks and cancel them from `onDisappear`, so dismissing a screen never leaves a request retaining the view model.
+* **Progressive enhancement over version gating.** iOS 26 APIs are wrapped once in `View+Extension.swift` (`liquidGlassTabBar()`, `softBottomScrollEdge()`, `prominentActionButtonStyle()`, `glassCard()`) rather than being `#available`-checked at each call site. Call sites stay readable and the iOS 18 fallback lives in exactly one place per effect.
+* **Progressive enhancement over version gating.** iOS 26 APIs are wrapped once in `View+Extension.swift` (`liquidGlassTabBar()`, `softBottomScrollEdge()`, `prominentActionButtonStyle()`, `glassCard()`) rather than being `#available`-checked at each call site. Call sites stay readable and the iOS 18 fallback lives in exactly one place per effect.
 
 ### APIs used
 
@@ -78,7 +80,7 @@ No API keys are required.
 1. Clone the repository: `git clone https://github.com`
 2. Open `Randomness.xcodeproj` in **Xcode**.
 3. Let Swift Package Manager resolve dependencies automatically (the app currently ships with none).
-4. Select an iOS Simulator (**iOS 26.2+ required**) and press `Cmd + R` to run.
+4. Select an iOS Simulator (**iOS 18.6+**; run on iOS 26 to see the Liquid Glass treatment) and press `Cmd + R` to run.
 5. Tap **Get Started** on the landing screen to reach the dashboard.
 
 > Saving an image to Photos prompts for add-only photo library access, described by `NSPhotoLibraryAddUsageDescription` in the target's build settings.
