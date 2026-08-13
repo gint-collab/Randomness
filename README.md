@@ -81,16 +81,21 @@ The `ApplePay` module is a self-contained checkout mock:
 
 No API keys are required.
 
-## 📸 Screenshots / Demo
+## 📸 Screenshots - Cats / Demo
 
 | Landing Page | Main Dashboard | Cat Gallery | Cat Feed | Cat Detail |
 | --- | --- | --- | --- | --- |
-| <img width="300" height="650" alt="Simulator Screenshot - iPhone 17 - 2026-08-13 at 03 03 04" src="https://github.com/user-attachments/assets/12f3b50b-d750-4c6e-8e48-cc2e09854c2f" /> | <img width="300" height="650" alt="Simulator Screenshot - iPhone 17 - 2026-08-13 at 03 03 09" src="https://github.com/user-attachments/assets/70ab3742-148c-47c2-9e4e-589a5ba2702d" /> | <img width="300" height="650" alt="Simulator Screenshot - iPhone 17 - 2026-08-13 at 03 03 29" src="https://github.com/user-attachments/assets/96465b1c-575c-481b-a45c-800c61a19ed1" /> | <img width="300" height="650" alt="Simulator Screenshot - iPhone 17 - 2026-08-13 at 03 12 32" src="https://github.com/user-attachments/assets/f1205205-e574-4689-96ac-3dbf64f9c9bd" /> | <img width="300" height="650" alt="Simulator Screenshot - iPhone 17 - 2026-08-13 at 03 06 16" src="https://github.com/user-attachments/assets/9f8d0340-4773-4206-baf1-f0986e9b2c39" /> |
+| <img width="300" height="650" alt="Simulator Screenshot - iPhone 17 - 2026-08-13 at 03 03 04" src="https://github.com/user-attachments/assets/12f3b50b-d750-4c6e-8e48-cc2e09854c2f" /> | <img width="300" height="650" alt="Simulator Screenshot - iPhone 17 - 2026-08-13 at 18 14 13" src="https://github.com/user-attachments/assets/4ff7bb76-00a9-421b-a516-dfcf0fba7c06" /> | <img width="300" height="650" alt="Simulator Screenshot - iPhone 17 - 2026-08-13 at 03 03 29" src="https://github.com/user-attachments/assets/96465b1c-575c-481b-a45c-800c61a19ed1" /> | <img width="300" height="650" alt="Simulator Screenshot - iPhone 17 - 2026-08-13 at 03 12 32" src="https://github.com/user-attachments/assets/f1205205-e574-4689-96ac-3dbf64f9c9bd" /> | <img width="300" height="650" alt="Simulator Screenshot - iPhone 17 - 2026-08-13 at 03 06 16" src="https://github.com/user-attachments/assets/9f8d0340-4773-4206-baf1-f0986e9b2c39" /> |
 
 ## 📸 Churk Norris / Demo
 | Landing Page |
 | --- |
-| <img width="250" height="600" alt="Simulator Screenshot - iPhone 17 - 2026-08-13 at 03 05 04" src="https://github.com/user-attachments/assets/cd616aa1-d0f0-4092-beb7-895c9b202401" /> |
+| <img width="250" height="560" alt="Simulator Screenshot - iPhone 17 - 2026-08-13 at 03 05 04" src="https://github.com/user-attachments/assets/cd616aa1-d0f0-4092-beb7-895c9b202401" /> |
+
+## 📸 Apple Pay / Demo
+| Apple Pay | Payment Bottomsheet | Payment Method | Payment Summary |
+| --- | --- | --- | --- |
+| <img width="300" height="650" alt="Simulator Screenshot - iPhone 17 - 2026-08-13 at 18 14 27" src="https://github.com/user-attachments/assets/c5fc4cfb-d277-4ed1-8446-6a5234f743fa" /> | <img width="300" height="650" alt="Simulator Screenshot - iPhone 17 - 2026-08-13 at 18 14 33" src="https://github.com/user-attachments/assets/9de7cd03-da69-4f91-a2da-ddf29b3a91bc" /> | <img width="300" height="650" alt="Simulator Screenshot - iPhone 17 - 2026-08-13 at 18 14 39" src="https://github.com/user-attachments/assets/bcaeff4f-3447-45ef-a71a-1c1462bc737d" /> | <img width="300" height="650" alt="Simulator Screenshot - iPhone 17 - 2026-08-13 at 18 14 46" src="https://github.com/user-attachments/assets/354f1685-ae81-4ec6-a3a5-04e9ae1be629" /> |
 
 ## 🚀 How to Run the Project
 
