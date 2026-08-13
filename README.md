@@ -1,6 +1,6 @@
 # Randomness
 
-A native iOS application built with Swift and SwiftUI that serves up random content — cat pictures, cat facts and Chuck Norris jokes — from three public APIs.
+A native iOS application built with Swift and SwiftUI that serves up random content — cat pictures, cat facts and Chuck Norris jokes — from three public APIs, plus an Apple Pay checkout demo.
 
 ## 📱 Features & Highlights
 
@@ -10,9 +10,10 @@ A native iOS application built with Swift and SwiftUI that serves up random cont
 * **Cat detail with a paging carousel:** Tapping a cat opens a full-bleed carousel seeded with the list already loaded by the gallery — no extra request — plus a refreshable cat fact.
 * **Share & save to Photos:** A toolbar menu shares the decoded picture itself (not just a link) and writes it to the photo library using add-only `PHPhotoLibrary` access, with the image served straight from cache when it is already on screen.
 * **Chuck Norris jokes:** A card-based screen with pull-to-refresh and a Liquid Glass "Another one" button.
+* **Apple Pay checkout (Simulator only):** A PassKit demo that builds a real `PKPaymentRequest` from a selectable cart, presents the native Apple Pay sheet with a `PKPaymentButton`, and simulates authorization locally — the payment token is intentionally discarded and never sent anywhere.
 * **Custom image pipeline:** An `actor`-based downloader with an `NSCache` layer (200 items / ~100 MB) and request coalescing, so concurrent requests for the same URL share a single download.
 * **Shimmer loading states:** Every screen renders a skeleton that mirrors its real layout while the first page loads, instead of a bare spinner.
-* **Liquid Glass UI:** On iOS 26 the tab bar minimizes on scroll, scroll edges soften and call-to-action buttons use the glass-prominent style. Every one of these is behind an `#available` check, so the app degrades cleanly to standard SwiftUI chrome on iOS 18yle. Every one of these is behind an `#available` check, so the app degrades cleanly to standard SwiftUI chrome on iOS 18.
+* **Liquid Glass UI:** On iOS 26 the tab bar minimizes on scroll, scroll edges soften and call-to-action buttons use the glass-prominent style. Every one of these is behind an `#available` check, so the app degrades cleanly to standard SwiftUI chrome on iOS 18.
 * **Accessibility & Dark Mode:** Semantic labels and traits throughout, dynamic-type-friendly text, and system materials that adapt to the active appearance.
 
 ## 🛠 Tech Stack & Architecture
@@ -22,6 +23,7 @@ A native iOS application built with Swift and SwiftUI that serves up random cont
 * **Architecture:** MVVM + Coordinator
 * **Concurrency:** Swift Concurrency (async/await, actors, `TaskGroup`)
 * **Networking:** Custom `URLSession` layer — no third-party dependencies
+* **Apple frameworks:** PassKit (Apple Pay), Photos (add-only library access)
 * **Dependency Manager:** Swift Package Manager (SPM)
 * **Minimum iOS:** 18.6 (Liquid Glass enhancements light up on iOS 26+)
 
@@ -37,6 +39,7 @@ Randomness/
 │   ├── Protocols/        ViewModelProtocol, LoadableViewModel, Coordinator protocols
 │   └── Services/         CatService, ChuckNorrisService, ImageDownloader, ImageSaver
 └── Module/
+    ├── ApplePay/        Simulator-only Apple Pay checkout demo (PassKit)
     ├── CatModule/        CatTabbar → CatList (gallery), CatFeeds (feed), CatDetails
     ├── ChuckNorrisMod/   Random joke screen
     ├── Dashboard/        Menu of available content
@@ -51,8 +54,22 @@ Randomness/
 * **Cache-free session.** These endpoints return random payloads for the same URL, so the client uses an ephemeral, cache-free `URLSession` — otherwise pull-to-refresh would look like a no-op.
 * **Randomised fact pages.** `catfact.ninja/facts` is paginated rather than random, so the service requests a random page to keep refreshes interesting.
 * **Deliberate task lifetimes.** View models capture `self` weakly, track their unstructured tasks and cancel them from `onDisappear`, so dismissing a screen never leaves a request retaining the view model.
-* **Progressive enhancement over version gating.** iOS 26 APIs are wrapped once in `View+Extension.swift` (`liquidGlassTabBar()`, `softBottomScrollEdge()`, `prominentActionButtonStyle()`, `glassCard()`) rather than being `#available`-checked at each call site. Call sites stay readable and the iOS 18 fallback lives in exactly one place per effect.
-* **Progressive enhancement over version gating.** iOS 26 APIs are wrapped once in `View+Extension.swift` (`liquidGlassTabBar()`, `softBottomScrollEdge()`, `prominentActionButtonStyle()`, `glassCard()`) rather than being `#available`-checked at each call site. Call sites stay readable and the iOS 18 fallback lives in exactly one place per effect.
+* **Progressive enhancement over version gating.** iOS 26 APIs are wrapped once in `View+Extension.swift` (`liquidGlassTabBar()`, `softBottomScrollEdge()`, `prominentActionButtonStyle()`, `glassCard()`) rather than being `#available`-checked at each call site. Call sites stay readable and the iOS 18 fallback lives in 
+* **UIKit only where SwiftUI has no equivalent.** The Apple Pay call to action is the official `PKPaymentButton` bridged through a small `UIViewRepresentable`, so the demo uses Apple's sanctioned mark instead of a look-alike.
+* **Delegate callbacks as `async` values.** `ApplePayService` wraps `PKPaymentAuthorizationController`'s delegate dance in a `CheckedContinuation`, so the view model just does `await service.pay(for:)` and gets a single `PaymentOutcome` back.
+
+### 💳 Apple Pay demo (Simulator only)
+
+The `ApplePay` module is a self-contained checkout mock:
+
+* `ApplePayModels` — the `DemoProduct` catalog, the `PaymentOutcome` result type and `ApplePayConfiguration` (merchant identifier, country/currency codes, supported networks, merchant capabilities).
+* `ApplePayService` — builds the `PKPaymentRequest` (one summary item per product plus a grand total), presents the sheet and reports success, cancellation or failure. `MockApplePayService` covers previews and tests without touching PassKit.
+* `ApplePayViewModel` — cart selection, currency formatting and loading/error state via the shared `LoadableViewModel` helper.
+* `ApplePayView` — the cart list, running total, `PKPaymentButton`, an "Apple Pay unavailable" hint and result alerts.
+
+**Why Simulator only:** the app is signed with a placeholder merchant identifier (`merchant.com.randomness.demo` in `Randomness.entitlements`) and there is no backend, so `payment.token` is deliberately discarded and a random transaction id is returned. Nothing is charged and no real payment can succeed. Making this production-ready would mean registering a real merchant ID, adding a payment processing certificate and forwarding the token to a server for decryption.
+
+**Trying it out:** run on a Simulator, open the **Wallet** app and add one of Apple's test cards, then choose **Apple Pay - Simulator Only** from the dashboard, pick items and authorize with a double-click of the side button (Features ▸ Face ID ▸ Matching Face).
 
 ### APIs used
 
@@ -82,8 +99,14 @@ No API keys are required.
 3. Let Swift Package Manager resolve dependencies automatically (the app currently ships with none).
 4. Select an iOS Simulator (**iOS 18.6+**; run on iOS 26 to see the Liquid Glass treatment) and press `Cmd + R` to run.
 5. Tap **Get Started** on the landing screen to reach the dashboard.
+6. *(Optional)* For the Apple Pay demo, open **Wallet** in the same Simulator and add a test card first.
 
 > Saving an image to Photos prompts for add-only photo library access, described by `NSPhotoLibraryAddUsageDescription` in the target's build settings.
+
+> The Apple Pay entitlement (`Randomness.entitlements`) uses a placeholder merchant identifier. Building to a real device requires replacing it — and `ApplePayConfiguration.merchantIdentifier` — with a merchant ID registered to your team
+> Saving an image to Photos prompts for add-only photo library access, described by `NSPhotoLibraryAddUsageDescription` in the target's build settings.
+
+> The Apple Pay entitlement (`Randomness.entitlements`) uses a placeholder merchant identifier. Building to a real device requires replacing it — and `ApplePayConfiguration.merchantIdentifier` — with a merchant ID registered to your team.
 
 ## ✅ Testing
 
@@ -91,7 +114,7 @@ Unit tests live in `RandomnessTests`, written with both **Swift Testing** and **
 
 * `NetworkingTests` — request building, status validation and decoding failures in `HTTPClient`.
 * `Services` — `CatService` and `ChuckNorrisService` driven entirely offline through `MockHTTPClient`.
-* `AppCoordinatorTests` — routing, authentication flow and the view factory.
+* `AppCoordinatorTests` — routing, authentication flow and the view factory (including the Apple Pay route, backed by `MockApplePayService`).
 * `Mocks` — `MockHTTPClient` and `EndpointRecorder`, which captures the endpoints a service requests.
 
 Run them with `Cmd + U`, or:
