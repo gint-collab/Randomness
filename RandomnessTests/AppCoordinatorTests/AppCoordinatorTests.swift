@@ -31,6 +31,9 @@ private struct StubDependencies: AppDependenciesProtocol {
     let httpClient: HTTPClientProtocol = StubHTTPClient()
     let catService: CatServiceProtocol = MockCatService()
     let chuckNorrisService: ChuckNorrisServiceProtocol = StubChuckNorrisService()
+
+    @MainActor
+    func makeApplePayService() -> ApplePayServiceProtocol { MockApplePayService() }
 }
 
 /// Builds a `CatImage` fixture.

@@ -30,6 +30,9 @@ private struct ViewStubDependencies: AppDependenciesProtocol {
     let httpClient: HTTPClientProtocol = ViewStubHTTPClient()
     let catService: CatServiceProtocol = MockCatService()
     let chuckNorrisService: ChuckNorrisServiceProtocol = ViewStubChuckNorrisService()
+
+    @MainActor
+    func makeApplePayService() -> ApplePayServiceProtocol { MockApplePayService() }
 }
 
 private func makeImage(id: String = "abc") -> CatImage {

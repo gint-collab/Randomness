@@ -12,6 +12,8 @@ protocol AppDependenciesProtocol {
     var httpClient: HTTPClientProtocol { get }
     var catService: CatServiceProtocol { get }
     var chuckNorrisService: ChuckNorrisServiceProtocol { get }
+    /// Apple Pay relies on PassKit UI, so it is created on demand on the main actor.
+    @MainActor func makeApplePayService() -> ApplePayServiceProtocol
 }
 
 struct AppDependencies: AppDependenciesProtocol {
@@ -23,6 +25,11 @@ struct AppDependencies: AppDependenciesProtocol {
         self.httpClient = httpClient
         self.catService = CatService(client: httpClient)
         self.chuckNorrisService = ChuckNorrisService(client: httpClient)
+    }
+
+    @MainActor
+    func makeApplePayService() -> ApplePayServiceProtocol {
+        ApplePayService()
     }
 }
 

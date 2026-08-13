@@ -11,6 +11,7 @@ import Combine
 enum ListItems: String, CaseIterable, Identifiable {
     case cat = "Cats"
     case chuckNorris = "Chuck Norris"
+    case applePay = "Apple Pay - Simulator Only"
 
     var id: String { rawValue }
 
@@ -18,6 +19,7 @@ enum ListItems: String, CaseIterable, Identifiable {
         switch self {
         case .cat: return .catList
         case .chuckNorris: return .chuckNorris
+        case .applePay: return .applePay
         }
     }
 }

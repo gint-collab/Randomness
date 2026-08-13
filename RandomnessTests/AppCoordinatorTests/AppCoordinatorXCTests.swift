@@ -33,6 +33,9 @@ private struct XCStubDependencies: AppDependenciesProtocol {
     let httpClient: HTTPClientProtocol = XCStubHTTPClient()
     let catService: CatServiceProtocol = MockCatService()
     let chuckNorrisService: ChuckNorrisServiceProtocol = XCStubChuckNorrisService()
+
+    @MainActor
+    func makeApplePayService() -> ApplePayServiceProtocol { MockApplePayService() }
 }
 
 // MARK: - Tests

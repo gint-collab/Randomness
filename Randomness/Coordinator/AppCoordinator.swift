@@ -15,6 +15,7 @@ enum AppRoute: RouteProtocol {
     case catFeeds(CatImage)
     case catList
     case chuckNorris
+    case applePay
 }
 
 @MainActor
@@ -72,6 +73,10 @@ final class AppCoordinator: ObservableObject, AppCoordinating {
                     image: image,
                     service: self.dependencies.catService
                 )
+            )
+        case .applePay:
+            ApplePayView(
+                viewModel: ApplePayViewModel(service: self.dependencies.makeApplePayService())
             )
         }
     }
