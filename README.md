@@ -99,3 +99,7 @@ Run them with `Cmd + U`, or:
 ```bash
 xcodebuild test -project Randomness.xcodeproj -scheme Randomness -destination 'platform=iOS Simulator,name=iPhone 17'
 ```
+
+## 📄 License
+
+Released under the [MIT License](LICENSE). This project is publicly available for portfolio and educational reference.
